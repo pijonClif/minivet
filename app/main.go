@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
 var _ = fmt.Print
@@ -17,6 +18,10 @@ func main() {
 			fmt.Fprintln(os.Stderr, "Error reading input:", err)
 			os.Exit(1)
 		}
-		fmt.Println(cmd[:len(cmd)-1] + ": command not found")
+		cmd = strings.TrimSpace(cmd)
+		if cmd == "exit" {
+			break
+		}
+		fmt.Println(cmd + ": command not found")
 	}
 }
