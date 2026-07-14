@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 	"slices"
 	"strings"
 )
@@ -17,26 +18,35 @@ func main() {
 	for {
 		fmt.Print("$ ")
 
-		cmd, err := reader.ReadString('\n')
+		input, err := reader.ReadString('\n')
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Error reading input:", err)
 			os.Exit(1)
 		}
 
-		cmd = strings.TrimSpace(cmd)
-		tokens := strings.Split(cmd, " ")
+		tokens := strings.Fields(input)
+		cmd, args := tokens[0], tokens[1:]
 
-		if tokens[0] == "type" && slices.Contains(builtins, tokens[1]) {
-			fmt.Println(tokens[1] + " is a shell builtin")
-		} else if tokens[0] == "type" {
-			fmt.Println(tokens[1] + " not found")
-		} else if cmd == "exit" {
-			break
-		} else if strings.HasPrefix(cmd, "echo ") {
-			fmt.Println(cmd[5:])
-		} else {
-			fmt.Println(cmd + ": command not found")
+		if cmd == "echo" {
+			fmt.Println(strings.Join(args, " "))
+			continue
 		}
 
+		if cmd == "exit" {
+			break
+		}
+
+		if cmd == "type" {
+			if slices.Contains(builtins, tokens[1]) {
+				fmt.Println(tokens[1] + " is a shell builtin")
+			} else if path, err := exec.LookPath(args[0]); err == nil {
+				fmt.Println(args[0] + " is " + path)
+			} else if tokens[0] == "type" {
+				fmt.Println(tokens[1] + " not found")
+			}
+			continue
+		}
+
+		fmt.Println(cmd + ": command not found")
 	}
 }
