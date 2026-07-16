@@ -25,7 +25,10 @@ func main() {
 		}
 
 		tokens := strings.Fields(input)
-		cmd, args := tokens[0], tokens[1:]
+		if len(tokens)==0{
+			continue
+		}
+		cmd, args := tokens[0], tokens[1:] //user_command, user_command_arguments
 
 		if cmd == "echo" {
 			fmt.Println(strings.Join(args, " "))
@@ -38,15 +41,20 @@ func main() {
 
 		if cmd == "type" {
 			if slices.Contains(builtins, tokens[1]) {
-				fmt.Println(tokens[1] + " is a shell builtin")
+				fmt.Println(args[0] + " is a shell builtin")
 			} else if path, err := exec.LookPath(args[0]); err == nil {
 				fmt.Println(args[0] + " is " + path)
-			} else if tokens[0] == "type" {
-				fmt.Println(tokens[1] + " not found")
+			} else if cmd == "type" {
+				fmt.Println(args[0] + " not found")
 			}
 			continue
+		} else if _, err := exec.LookPath(cmd); err == nil {
+			prog := exec.Command(cmd, args...)
+			prog.Stdout = os.Stdout
+			prog.Stderr = os.Stderr
+			prog.Run()
+		} else {
+			fmt.Printf("%s: command not found\n", cmd)
 		}
-
-		fmt.Println(cmd + ": command not found")
 	}
 }
