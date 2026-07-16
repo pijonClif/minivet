@@ -48,7 +48,18 @@ func main() {
 			continue
 		
 		case "cd":
-			err:=os.Chdir(args[0])
+			targetDir:=args[0]
+
+			if targetDir=="~"{
+				home,err:=os.UserHomeDir()
+				if err!=nil{
+					fmt.Printf("something evil has occurred [couldnt locate home path]")
+				}
+				targetDir=home 
+			}
+			
+			err:=os.Chdir(targetDir)
+
 			if err!=nil{
 				fmt.Printf("%s: %s: No such file or directory\n",cmd, args[0])
 			}
