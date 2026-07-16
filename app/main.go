@@ -9,11 +9,12 @@ import (
 	"strings"
 )
 
+var builtins = []string{"echo", "exit", "type", "pwd", "cd"}
+
 var _ = fmt.Print
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
-	builtins := []string{"echo", "exit", "type", "pwd", "cd"}
 
 	for {
 		fmt.Print("$ ")
@@ -25,13 +26,12 @@ func main() {
 		}
 
 		tokens := strings.Fields(input)
-		if len(tokens)==0{
+		if len(tokens) == 0 {
 			continue
 		}
 		cmd, args := tokens[0], tokens[1:] //user_command, user_command_arguments
 
-
-		switch cmd{
+		switch cmd {
 		case "echo":
 			fmt.Println(strings.Join(args, " "))
 			continue
@@ -40,42 +40,19 @@ func main() {
 			os.Exit(0)
 
 		case "pwd":
-			abs_dir, err:= os.Getwd()
-			if err!=nil{
-				fmt.Println(err)
-			}
-			fmt.Println(abs_dir)
+			handlePwd()
 			continue
-		
+
 		case "cd":
-			targetDir:=args[0]
+			handleCd(args[0])
+			continue
 
-			if targetDir=="~"{
-				home,err:=os.UserHomeDir()
-				if err!=nil{
-					fmt.Printf("something evil has occurred [couldnt locate home path]")
-				}
-				targetDir=home 
-			}
-			
-			err:=os.Chdir(targetDir)
-
-			if err!=nil{
-				fmt.Printf("%s: %s: No such file or directory\n",cmd, args[0])
-			}
+		case "type":
+			handleType(args[0])
 			continue
 		}
 
-		if cmd == "type" {
-			if slices.Contains(builtins, args[0]) {
-				fmt.Println(args[0] + " is a shell builtin")
-			} else if path, err := exec.LookPath(args[0]); err == nil {
-				fmt.Println(args[0] + " is " + path)
-			} else if cmd == "type" {
-				fmt.Println(args[0] + " not found")
-			}
-			continue
-		} else if _, err := exec.LookPath(cmd); err == nil {
+		if _, err := exec.LookPath(cmd); err == nil {
 			prog := exec.Command(cmd, args...)
 			prog.Stdout = os.Stdout
 			prog.Stderr = os.Stderr
@@ -83,5 +60,39 @@ func main() {
 		} else {
 			fmt.Printf("%s: command not found\n", cmd)
 		}
+	}
+}
+
+func handlePwd() {
+	abs_dir, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(abs_dir)
+}
+
+func handleCd(arg string) {
+	targetDir := arg
+	if targetDir == "~" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Printf("something evil has occurred [couldnt locate home path]")
+		}
+		targetDir = home
+	}
+
+	err := os.Chdir(targetDir)
+	if err != nil {
+		fmt.Printf("cd: %s: No such file or directory\n", arg)
+	}
+}
+
+func handleType(arg string) {
+	if slices.Contains(builtins, arg) {
+		fmt.Println(arg + " is a shell builtin")
+	} else if path, err := exec.LookPath(arg); err == nil {
+		fmt.Println(arg + " is " + path)
+	} else {
+		fmt.Println(arg + " not found")
 	}
 }
