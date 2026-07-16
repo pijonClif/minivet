@@ -13,7 +13,7 @@ var _ = fmt.Print
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
-	builtins := []string{"echo", "exit", "type", "pwd"}
+	builtins := []string{"echo", "exit", "type", "pwd", "cd"}
 
 	for {
 		fmt.Print("$ ")
@@ -45,6 +45,13 @@ func main() {
 				fmt.Println(err)
 			}
 			fmt.Println(abs_dir)
+			continue
+		
+		case "cd":
+			err:=os.Chdir(args[0])
+			if err!=nil{
+				fmt.Printf("%s: %s: No such file or directory\n",cmd, args[0])
+			}
 			continue
 		}
 
