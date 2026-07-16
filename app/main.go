@@ -13,7 +13,7 @@ var _ = fmt.Print
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
-	builtins := []string{"echo", "exit", "type"}
+	builtins := []string{"echo", "exit", "type", "pwd"}
 
 	for {
 		fmt.Print("$ ")
@@ -30,17 +30,26 @@ func main() {
 		}
 		cmd, args := tokens[0], tokens[1:] //user_command, user_command_arguments
 
-		if cmd == "echo" {
+
+		switch cmd{
+		case "echo":
 			fmt.Println(strings.Join(args, " "))
+			continue
+
+		case "exit":
+			os.Exit(0)
+
+		case "pwd":
+			abs_dir, err:= os.Getwd()
+			if err!=nil{
+				fmt.Println(err)
+			}
+			fmt.Println(abs_dir)
 			continue
 		}
 
-		if cmd == "exit" {
-			break
-		}
-
 		if cmd == "type" {
-			if slices.Contains(builtins, tokens[1]) {
+			if slices.Contains(builtins, args[0]) {
 				fmt.Println(args[0] + " is a shell builtin")
 			} else if path, err := exec.LookPath(args[0]); err == nil {
 				fmt.Println(args[0] + " is " + path)
