@@ -1,35 +1,43 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/chzyer/readline"
 )
 
 var builtins = []string{"echo", "exit", "type", "pwd", "cd", "history"}
 var history []string
 
-var _ = fmt.Print
-
 func main() {
-	reader := bufio.NewReader(os.Stdin)
-	
+	rl, err := readline.New("$ ")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error initializing readline:", err)
+		os.Exit(1)
+	}
+	defer rl.Close()
 
 	for {
-		fmt.Print("$ ")
-
-		input, err := reader.ReadString('\n')
+		input, err := rl.Readline()
 		if err != nil {
+			if err == readline.ErrInterrupt { // Ctrl-C
+				continue
+			}
+			if err == io.EOF { // Ctrl-D
+				os.Exit(0)
+			}
 			fmt.Fprintln(os.Stderr, "Error reading input:", err)
 			os.Exit(1)
 		}
 
-		tokens := tokenize(input)
-		history = append(history, strings.TrimRight(input, "\n"))
+		tokens := tokenize(input + "\n")
+		history = append(history, input)
 		if len(tokens) == 0 {
 			continue
 		}
@@ -42,7 +50,7 @@ func main() {
 
 		case "exit":
 			os.Exit(0)
-
+			
 		case "pwd":
 			handlePwd()
 			continue
@@ -54,7 +62,7 @@ func main() {
 		case "type":
 			handleType(args[0])
 			continue
-
+		
 		case "history":
 			handleHistory(args)
 			continue
