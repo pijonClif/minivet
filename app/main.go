@@ -25,7 +25,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		tokens := strings.Fields(input)
+		tokens := tokenize(input)
 		if len(tokens) == 0 {
 			continue
 		}
@@ -63,6 +63,16 @@ func main() {
 	}
 }
 
+func handleType(arg string) {
+	if slices.Contains(builtins, arg) {
+		fmt.Println(arg + " is a shell builtin")
+	} else if path, err := exec.LookPath(arg); err == nil {
+		fmt.Println(arg + " is " + path)
+	} else {
+		fmt.Println(arg + " not found")
+	}
+}
+
 func handlePwd() {
 	abs_dir, err := os.Getwd()
 	if err != nil {
@@ -87,12 +97,29 @@ func handleCd(arg string) {
 	}
 }
 
-func handleType(arg string) {
-	if slices.Contains(builtins, arg) {
-		fmt.Println(arg + " is a shell builtin")
-	} else if path, err := exec.LookPath(arg); err == nil {
-		fmt.Println(arg + " is " + path)
-	} else {
-		fmt.Println(arg + " not found")
+func tokenize(input string) []string {
+	var tokens []string
+	curr, active, quoted := "", false, false
+
+	for _, c := range input {
+		if quoted {
+			if c == '\'' {
+				quoted = false
+			} else {
+				curr += string(c)
+			}
+		} else if c == '\'' {
+			quoted, active = true, true
+		} else if c == ' ' || c == '\t' || c == '\n' {
+			if active {
+				tokens, curr, active = append(tokens, curr), "", false
+			}
+		} else {
+			curr, active = curr+string(c), true
+		}
 	}
+	if active {
+		tokens = append(tokens, curr)
+	}
+	return tokens
 }
