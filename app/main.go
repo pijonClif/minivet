@@ -9,12 +9,14 @@ import (
 	"strings"
 )
 
-var builtins = []string{"echo", "exit", "type", "pwd", "cd"}
+var builtins = []string{"echo", "exit", "type", "pwd", "cd", "history"}
+var history []string
 
 var _ = fmt.Print
 
 func main() {
 	reader := bufio.NewReader(os.Stdin)
+	
 
 	for {
 		fmt.Print("$ ")
@@ -26,6 +28,7 @@ func main() {
 		}
 
 		tokens := tokenize(input)
+		history = append(history, strings.TrimRight(input, "\n"))
 		if len(tokens) == 0 {
 			continue
 		}
@@ -49,6 +52,10 @@ func main() {
 
 		case "type":
 			handleType(args[0])
+			continue
+
+		case "history":
+			handleHistory()
 			continue
 		}
 
@@ -94,6 +101,12 @@ func handleCd(arg string) {
 	err := os.Chdir(targetDir)
 	if err != nil {
 		fmt.Printf("cd: %s: No such file or directory\n", arg)
+	}
+}
+
+func handleHistory() {
+	for i, cmd := range history {
+		fmt.Printf("%5d  %s\n", i+1, cmd)
 	}
 }
 
