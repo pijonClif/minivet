@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -55,7 +56,7 @@ func main() {
 			continue
 
 		case "history":
-			handleHistory()
+			handleHistory(args)
 			continue
 		}
 
@@ -104,9 +105,15 @@ func handleCd(arg string) {
 	}
 }
 
-func handleHistory() {
-	for i, cmd := range history {
-		fmt.Printf("%5d  %s\n", i+1, cmd)
+func handleHistory(args []string) {
+	start := 0
+	if len(args) > 0 {
+		if n, err := strconv.Atoi(args[0]); err == nil && n < len(history) {
+			start = len(history) - n
+		}
+	}
+	for i := start; i < len(history); i++ {
+		fmt.Printf("%5d  %s\n", i+1, history[i])
 	}
 }
 
