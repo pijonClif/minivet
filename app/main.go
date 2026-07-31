@@ -120,8 +120,9 @@ func tokenize(input string) []string {
 		case inDouble:
 			if c == '"' {
 				inDouble = false
-			} else if c == '\\' && i+1 < n {
-				curr.WriteRune(c)	
+			} else if c == '\\' && i+1 < n && strings.ContainsRune(`"\$`+"`", runes[i+1]) {
+				i++
+				curr.WriteRune(runes[i])
 			} else {
 				curr.WriteRune(c)
 			}
