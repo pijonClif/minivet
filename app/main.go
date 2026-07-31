@@ -99,27 +99,45 @@ func handleCd(arg string) {
 
 func tokenize(input string) []string {
 	var tokens []string
-	curr, active, quoted := "", false, false
+	var curr strings.Builder
+	started := false
+	inSingle := false
+	inDouble := false
 
 	for _, c := range input {
-		if quoted {
+		switch {
+		case inSingle:
 			if c == '\'' {
-				quoted = false
+				inSingle = false
 			} else {
-				curr += string(c)
+				curr.WriteRune(c)
 			}
-		} else if c == '\'' {
-			quoted, active = true, true
-		} else if c == ' ' || c == '\t' || c == '\n' {
-			if active {
-				tokens, curr, active = append(tokens, curr), "", false
+		case inDouble:
+			if c == '"' {
+				inDouble = false
+			} else {
+				curr.WriteRune(c)
 			}
-		} else {
-			curr, active = curr+string(c), true
+		case c == '\'':
+			inSingle = true
+			started = true
+		case c == '"':
+			inDouble = true
+			started = true
+		case c == ' ' || c == '\t' || c == '\n' || c == '\r':
+			if started {
+				tokens = append(tokens, curr.String())
+				curr.Reset()
+				started = false
+			}
+		default:
+			started = true
+			curr.WriteRune(c)
 		}
 	}
-	if active {
-		tokens = append(tokens, curr)
+
+	if started {
+		tokens = append(tokens, curr.String())
 	}
 	return tokens
 }
